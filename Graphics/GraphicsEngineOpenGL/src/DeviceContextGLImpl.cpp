@@ -606,7 +606,7 @@ void DeviceContextGLImpl::EndSubpass()
             const Uint32 RTAttachmentIdx = SubpassDesc.pRenderTargetAttachments[rt].AttachmentIndex;
             if (RTAttachmentIdx != ATTACHMENT_UNUSED)
             {
-                auto AttachmentLastUse = m_pActiveRenderPass->GetAttachmentFirstLastUse(RTAttachmentIdx).second;
+                Uint32 AttachmentLastUse = m_pActiveRenderPass->GetAttachmentFirstLastUse(RTAttachmentIdx).second;
                 if (AttachmentLastUse == m_SubpassIndex && RPDesc.pAttachments[RTAttachmentIdx].StoreOp == ATTACHMENT_STORE_OP_DISCARD)
                 {
                     if (SubpassFBOs.RenderTarget == 0)
@@ -627,7 +627,7 @@ void DeviceContextGLImpl::EndSubpass()
             const Uint32 DSAttachmentIdx = SubpassDesc.pDepthStencilAttachment->AttachmentIndex;
             if (DSAttachmentIdx != ATTACHMENT_UNUSED)
             {
-                auto AttachmentLastUse = m_pActiveRenderPass->GetAttachmentFirstLastUse(DSAttachmentIdx).second;
+                Uint32 AttachmentLastUse = m_pActiveRenderPass->GetAttachmentFirstLastUse(DSAttachmentIdx).second;
                 if (AttachmentLastUse == m_SubpassIndex && RPDesc.pAttachments[DSAttachmentIdx].StoreOp == ATTACHMENT_STORE_OP_DISCARD)
                 {
                     const TextureFormatAttribs& FmtAttribs = GetTextureFormatAttribs(RPDesc.pAttachments[DSAttachmentIdx].Format);
@@ -678,7 +678,6 @@ void DeviceContextGLImpl::NextSubpass()
     EndSubpass();
     TDeviceContextBase::NextSubpass();
     BeginSubpass();
-    m_AttachmentClearValues.clear();
 }
 
 void DeviceContextGLImpl::EndRenderPass()
@@ -686,6 +685,7 @@ void DeviceContextGLImpl::EndRenderPass()
     EndSubpass();
     TDeviceContextBase::EndRenderPass();
     m_ContextState.InvalidateFBO();
+    m_AttachmentClearValues.clear();
 }
 
 #ifdef DILIGENT_DEVELOPMENT

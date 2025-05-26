@@ -393,6 +393,9 @@ GPUTestingEnvironment::GPUTestingEnvironment(const CreateInfo& EnvCI, const Swap
             pFactoryVk->SetMessageCallback(EnvCI.MessageCallback);
             pFactoryVk->SetBreakOnError(false);
 
+            Version VulkanVersion = pFactoryVk->GetVulkanVersion();
+            VERIFY(VulkanVersion >= Version(1, 0), "Vulkan is not supported on this platform.");
+
             if (EnvCI.EnableDeviceSimulation)
                 pFactoryVk->EnableDeviceSimulation();
 
@@ -742,6 +745,15 @@ RefCntAutoPtr<ITexture> GPUTestingEnvironment::CreateTexture(const char* Name, T
 
     RefCntAutoPtr<ITexture> pTexture;
     m_pDevice->CreateTexture(TexDesc, pInitData ? &TexData : nullptr, &pTexture);
+    VERIFY_EXPR(pTexture != nullptr);
+
+    return pTexture;
+}
+
+RefCntAutoPtr<ITexture> GPUTestingEnvironment::CreateTexture(const TextureDesc& Desc, const TextureData* pData)
+{
+    RefCntAutoPtr<ITexture> pTexture;
+    m_pDevice->CreateTexture(Desc, pData, &pTexture);
     VERIFY_EXPR(pTexture != nullptr);
 
     return pTexture;
