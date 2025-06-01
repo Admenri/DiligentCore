@@ -334,7 +334,7 @@ void DeviceContextGLImpl::SetScissorRects(Uint32 NumRects, const Rect* pRects, U
         //     /
         //  OpenGL (0,0)
         //
-        int glBottom = (RTWidth == UINT32_MAX && RTHeight == UINT32_MAX) ? Rect.bottom : RTHeight - Rect.bottom;
+        int glBottom = (RTWidth == UINT32_MAX && RTHeight == UINT32_MAX) ? Rect.top : RTHeight - Rect.bottom;
 
         int width  = Rect.right - Rect.left;
         int height = Rect.bottom - Rect.top;
@@ -347,7 +347,7 @@ void DeviceContextGLImpl::SetScissorRects(Uint32 NumRects, const Rect* pRects, U
         {
             const Rect& Rect = m_ScissorRects[sr];
 
-            int glBottom = (RTWidth == UINT32_MAX && RTHeight == UINT32_MAX) ? Rect.bottom : RTHeight - Rect.bottom;
+            int glBottom = (RTWidth == UINT32_MAX && RTHeight == UINT32_MAX) ? Rect.top : RTHeight - Rect.bottom;
             int width    = Rect.right - Rect.left;
             int height   = Rect.bottom - Rect.top;
             glScissorIndexed(sr, Rect.left, glBottom, width, height);
