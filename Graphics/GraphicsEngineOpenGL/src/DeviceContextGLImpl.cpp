@@ -251,7 +251,7 @@ void DeviceContextGLImpl::SetViewports(Uint32 NumViewports, const Viewport* pVie
         //     /
         //  OpenGL (0,0)
         //
-        float BottomLeftY = static_cast<float>(RTHeight) - (vp.TopLeftY + vp.Height);
+        float BottomLeftY = (RTHeight == UINT32_MAX ? vp.TopLeftY : static_cast<float>(RTHeight) - (vp.TopLeftY + vp.Height));
         float BottomLeftX = vp.TopLeftX;
 
         Int32 x = static_cast<int>(BottomLeftX);
@@ -284,7 +284,7 @@ void DeviceContextGLImpl::SetViewports(Uint32 NumViewports, const Viewport* pVie
         {
             const Viewport& vp = m_Viewports[i];
 
-            float BottomLeftY = static_cast<float>(RTHeight) - (vp.TopLeftY + vp.Height);
+            float BottomLeftY = (RTHeight == UINT32_MAX ? vp.TopLeftY : static_cast<float>(RTHeight) - (vp.TopLeftY + vp.Height));
             float BottomLeftX = vp.TopLeftX;
             glViewportIndexedf(i, BottomLeftX, BottomLeftY, vp.Width, vp.Height);
             DEV_CHECK_GL_ERROR("Failed to set viewport #", i);
@@ -334,7 +334,7 @@ void DeviceContextGLImpl::SetScissorRects(Uint32 NumRects, const Rect* pRects, U
         //     /
         //  OpenGL (0,0)
         //
-        int glBottom = RTHeight - Rect.bottom;
+        int glBottom = (RTHeight == UINT32_MAX ? Rect.top : RTHeight - Rect.bottom);
 
         int width  = Rect.right - Rect.left;
         int height = Rect.bottom - Rect.top;
@@ -347,7 +347,7 @@ void DeviceContextGLImpl::SetScissorRects(Uint32 NumRects, const Rect* pRects, U
         {
             const Rect& Rect = m_ScissorRects[sr];
 
-            int glBottom = RTHeight - Rect.bottom;
+            int glBottom = (RTHeight == UINT32_MAX ? Rect.top : RTHeight - Rect.bottom);
             int width    = Rect.right - Rect.left;
             int height   = Rect.bottom - Rect.top;
             glScissorIndexed(sr, Rect.left, glBottom, width, height);
