@@ -47,9 +47,9 @@
 #    error Unsupported platform
 #endif
 
-#if ENGINE_DLL && PLATFORM_WIN32 && defined(_MSC_VER)
+#if DILIGENT_OPENGL_SHARED && PLATFORM_WIN32 && defined(_MSC_VER)
 #    include "../../GraphicsEngine/interface/LoadEngineDll.h"
-#    define EXPLICITLY_LOAD_ENGINE_GL_DLL 1
+#    define DILIGENT_OPENGL_EXPLICIT_LOAD 1
 #endif
 
 DILIGENT_BEGIN_NAMESPACE(Diligent)
@@ -124,14 +124,18 @@ DILIGENT_END_INTERFACE
 
 #endif
 
-
-#if EXPLICITLY_LOAD_ENGINE_GL_DLL
-
 typedef struct IEngineFactoryOpenGL* (*GetEngineFactoryOpenGLType)();
+
+#if DILIGENT_OPENGL_EXPLICIT_LOAD
 
 inline GetEngineFactoryOpenGLType DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineOpenGL)()
 {
-    return (GetEngineFactoryOpenGLType)LoadEngineDll("GraphicsEngineOpenGL", "GetEngineFactoryOpenGL");
+    static GetEngineFactoryOpenGLType GetFactoryFunc = NULL;
+    if (GetFactoryFunc == NULL)
+    {
+        GetFactoryFunc = (GetEngineFactoryOpenGLType)LoadEngineDll("GraphicsEngineOpenGL", "GetEngineFactoryOpenGL");
+    }
+    return GetFactoryFunc;
 }
 
 #else
@@ -141,5 +145,21 @@ API_QUALIFIER
 struct IEngineFactoryOpenGL* DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryOpenGL)();
 
 #endif
+
+/// Loads the graphics engine OpenGL implementation DLL if necessary and returns the engine factory.
+inline struct IEngineFactoryOpenGL* DILIGENT_GLOBAL_FUNCTION(LoadAndGetEngineFactoryOpenGL)()
+{
+    GetEngineFactoryOpenGLType GetFactoryFunc = NULL;
+#if DILIGENT_OPENGL_EXPLICIT_LOAD
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineOpenGL)();
+    if (GetFactoryFunc == NULL)
+    {
+        return NULL;
+    }
+#else
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryOpenGL);
+#endif
+    return GetFactoryFunc();
+}
 
 DILIGENT_END_NAMESPACE // namespace Diligent

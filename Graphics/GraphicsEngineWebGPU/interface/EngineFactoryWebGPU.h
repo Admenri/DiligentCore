@@ -43,9 +43,9 @@
 #    error Unsupported platform
 #endif
 
-#if ENGINE_DLL && PLATFORM_WIN32 && defined(_MSC_VER)
+#if DILIGENT_WEBGPU_SHARED && PLATFORM_WIN32 && defined(_MSC_VER)
 #    include "../../GraphicsEngine/interface/LoadEngineDll.h"
-#    define EXPLICITLY_LOAD_ENGINE_WEBGPU_DLL 1
+#    define DILIGENT_WEBGPU_EXPLICIT_LOAD 1
 #endif
 
 DILIGENT_BEGIN_NAMESPACE(Diligent)
@@ -139,13 +139,18 @@ DILIGENT_END_INTERFACE
 #endif
 
 
-#if EXPLICITLY_LOAD_ENGINE_WEBGPU_DLL
-
 typedef struct IEngineFactoryWebGPU* (*GetEngineFactoryWebGPUType)();
+
+#if DILIGENT_WEBGPU_EXPLICIT_LOAD
 
 inline GetEngineFactoryWebGPUType DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineWebGPU)()
 {
-    return (GetEngineFactoryWebGPUType)LoadEngineDll("GraphicsEngineWebGPU", "GetEngineFactoryWebGPU");
+    static GetEngineFactoryWebGPUType GetFactoryFunc = NULL;
+    if (GetFactoryFunc == NULL)
+    {
+        GetFactoryFunc = (GetEngineFactoryWebGPUType)LoadEngineDll("GraphicsEngineWebGPU", "GetEngineFactoryWebGPU");
+    }
+    return GetFactoryFunc;
 }
 
 #else
@@ -154,5 +159,21 @@ API_QUALIFIER
 struct IEngineFactoryWebGPU* DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryWebGPU)();
 
 #endif
+
+/// Loads the graphics engine WebGPU implementation DLL if necessary and returns the engine factory.
+inline struct IEngineFactoryWebGPU* DILIGENT_GLOBAL_FUNCTION(LoadAndGetEngineFactoryWebGPU)()
+{
+    GetEngineFactoryWebGPUType GetFactoryFunc = NULL;
+#if DILIGENT_WEBGPU_EXPLICIT_LOAD
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineWebGPU)();
+    if (GetFactoryFunc == NULL)
+    {
+        return NULL;
+    }
+#else
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryWebGPU);
+#endif
+    return GetFactoryFunc();
+}
 
 DILIGENT_END_NAMESPACE // namespace Diligent

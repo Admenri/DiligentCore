@@ -37,20 +37,25 @@
 #    error Unsupported platform
 #endif
 
-#if ENGINE_DLL && PLATFORM_WIN32 && defined(_MSC_VER)
+#if DILIGENT_ARCHIVER_SHARED && PLATFORM_WIN32 && defined(_MSC_VER)
 #    include "../../GraphicsEngine/interface/LoadEngineDll.h"
-#    define EXPLICITLY_LOAD_ARCHIVER_FACTORY_DLL 1
+#    define DILIGENT_ARCHIVER_EXPLICIT_LOAD 1
 #endif
 
 DILIGENT_BEGIN_NAMESPACE(Diligent)
 
-#if EXPLICITLY_LOAD_ARCHIVER_FACTORY_DLL
-
 typedef struct IArchiverFactory* (*GetArchiverFactoryType)();
+
+#if DILIGENT_ARCHIVER_EXPLICIT_LOAD
 
 inline GetArchiverFactoryType DILIGENT_GLOBAL_FUNCTION(LoadArchiverFactory)()
 {
-    return (GetArchiverFactoryType)LoadEngineDll("Archiver", "GetArchiverFactory");
+    static GetArchiverFactoryType GetFactoryFunc = NULL;
+    if (GetFactoryFunc == NULL)
+    {
+        GetFactoryFunc = (GetArchiverFactoryType)LoadEngineDll("Archiver", "GetArchiverFactory");
+    }
+    return GetFactoryFunc;
 }
 
 #else
@@ -59,5 +64,21 @@ API_QUALIFIER
 struct IArchiverFactory* DILIGENT_GLOBAL_FUNCTION(GetArchiverFactory)();
 
 #endif
+
+/// Loads the archiver implementation DLL if necessary and returns the archiver factory.
+inline struct IArchiverFactory* DILIGENT_GLOBAL_FUNCTION(LoadAndGetArchiverFactory)()
+{
+    GetArchiverFactoryType GetFactoryFunc = NULL;
+#if DILIGENT_ARCHIVER_EXPLICIT_LOAD
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(LoadArchiverFactory)();
+    if (GetFactoryFunc == NULL)
+    {
+        return NULL;
+    }
+#else
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(GetArchiverFactory);
+#endif
+    return GetFactoryFunc();
+}
 
 DILIGENT_END_NAMESPACE // namespace Diligent

@@ -35,7 +35,7 @@
 #include "../../GraphicsEngine/interface/DeviceContext.h"
 #include "../../GraphicsEngine/interface/SwapChain.h"
 
-#if ENGINE_DLL
+#if DILIGENT_D3D12_SHARED
 #    include "../../GraphicsEngine/interface/LoadEngineDll.h"
 #endif
 
@@ -187,13 +187,18 @@ DILIGENT_END_INTERFACE
 #endif
 
 
-#if ENGINE_DLL
-
 typedef struct IEngineFactoryD3D12* (*GetEngineFactoryD3D12Type)();
+
+#if DILIGENT_D3D12_SHARED
 
 inline GetEngineFactoryD3D12Type DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineD3D12)()
 {
-    return (GetEngineFactoryD3D12Type)LoadEngineDll("GraphicsEngineD3D12", "GetEngineFactoryD3D12");
+    static GetEngineFactoryD3D12Type GetFactoryFunc = NULL;
+    if (GetFactoryFunc == NULL)
+    {
+        GetFactoryFunc = (GetEngineFactoryD3D12Type)LoadEngineDll("GraphicsEngineD3D12", "GetEngineFactoryD3D12");
+    }
+    return GetFactoryFunc;
 }
 
 #else
@@ -201,5 +206,22 @@ inline GetEngineFactoryD3D12Type DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineD3D1
 struct IEngineFactoryD3D12* DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryD3D12)();
 
 #endif
+
+/// Loads the graphics engine D3D12 implementation DLL if necessary and returns the engine factory.
+inline struct IEngineFactoryD3D12* DILIGENT_GLOBAL_FUNCTION(LoadAndGetEngineFactoryD3D12)()
+{
+    GetEngineFactoryD3D12Type GetFactoryFunc = NULL;
+#if DILIGENT_D3D12_SHARED
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineD3D12)();
+    if (GetFactoryFunc == NULL)
+    {
+        return NULL;
+    }
+#else
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryD3D12);
+#endif
+    return GetFactoryFunc();
+}
+
 
 DILIGENT_END_NAMESPACE // namespace Diligent

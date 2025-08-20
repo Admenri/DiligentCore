@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019-2023 Diligent Graphics LLC
+ *  Copyright 2019-2025 Diligent Graphics LLC
  *  Copyright 2015-2019 Egor Yusov
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,7 @@
 #include "../../GraphicsEngine/interface/DeviceContext.h"
 #include "../../GraphicsEngine/interface/SwapChain.h"
 
-#if ENGINE_DLL
+#if DILIGENT_D3D11_SHARED
 #    include "../../GraphicsEngine/interface/LoadEngineDll.h"
 #endif
 
@@ -151,14 +151,18 @@ DILIGENT_END_INTERFACE
 
 #endif
 
-
-#if ENGINE_DLL
-
 typedef struct IEngineFactoryD3D11* (*GetEngineFactoryD3D11Type)();
+
+#if DILIGENT_D3D11_SHARED
 
 inline GetEngineFactoryD3D11Type DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineD3D11)()
 {
-    return (GetEngineFactoryD3D11Type)LoadEngineDll("GraphicsEngineD3D11", "GetEngineFactoryD3D11");
+    static GetEngineFactoryD3D11Type GetFactoryFunc = NULL;
+    if (GetFactoryFunc == NULL)
+    {
+        GetFactoryFunc = (GetEngineFactoryD3D11Type)LoadEngineDll("GraphicsEngineD3D11", "GetEngineFactoryD3D11");
+    }
+    return GetFactoryFunc;
 }
 
 #else
@@ -166,5 +170,21 @@ inline GetEngineFactoryD3D11Type DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineD3D1
 struct IEngineFactoryD3D11* DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryD3D11)();
 
 #endif
+
+/// Loads the graphics engine D3D11 implementation DLL if necessary and returns the engine factory.
+inline struct IEngineFactoryD3D11* DILIGENT_GLOBAL_FUNCTION(LoadAndGetEngineFactoryD3D11)()
+{
+    GetEngineFactoryD3D11Type GetFactoryFunc = NULL;
+#if DILIGENT_D3D11_SHARED
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineD3D11)();
+    if (GetFactoryFunc == NULL)
+    {
+        return NULL;
+    }
+#else
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryD3D11);
+#endif
+    return GetFactoryFunc();
+}
 
 DILIGENT_END_NAMESPACE // namespace Diligent

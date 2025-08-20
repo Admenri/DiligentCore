@@ -44,9 +44,9 @@
 #    error Unsupported platform
 #endif
 
-#if ENGINE_DLL && PLATFORM_WIN32 && defined(_MSC_VER)
+#if DILIGENT_VK_SHARED && PLATFORM_WIN32 && defined(_MSC_VER)
 #    include "../../GraphicsEngine/interface/LoadEngineDll.h"
-#    define EXPLICITLY_LOAD_ENGINE_VK_DLL 1
+#    define DILIGENT_VK_EXPLICIT_LOAD 1
 #endif
 
 DILIGENT_BEGIN_NAMESPACE(Diligent)
@@ -130,13 +130,18 @@ DILIGENT_END_INTERFACE
 
 #endif
 
-#if EXPLICITLY_LOAD_ENGINE_VK_DLL
-
 typedef struct IEngineFactoryVk* (*GetEngineFactoryVkType)();
+
+#if DILIGENT_VK_EXPLICIT_LOAD
 
 inline GetEngineFactoryVkType DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineVk)()
 {
-    return (GetEngineFactoryVkType)LoadEngineDll("GraphicsEngineVk", "GetEngineFactoryVk");
+    static GetEngineFactoryVkType GetFactoryFunc = NULL;
+    if (GetFactoryFunc == NULL)
+    {
+        GetFactoryFunc = (GetEngineFactoryVkType)LoadEngineDll("GraphicsEngineVk", "GetEngineFactoryVk");
+    }
+    return GetFactoryFunc;
 }
 
 #else
@@ -145,5 +150,21 @@ API_QUALIFIER
 struct IEngineFactoryVk* DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryVk)();
 
 #endif
+
+/// Loads the graphics engine Vulkan implementation DLL if necessary and returns the engine factory.
+inline struct IEngineFactoryVk* DILIGENT_GLOBAL_FUNCTION(LoadAndGetEngineFactoryVk)()
+{
+    GetEngineFactoryVkType GetFactoryFunc = NULL;
+#if DILIGENT_VK_EXPLICIT_LOAD
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(LoadGraphicsEngineVk)();
+    if (GetFactoryFunc == NULL)
+    {
+        return NULL;
+    }
+#else
+    GetFactoryFunc = DILIGENT_GLOBAL_FUNCTION(GetEngineFactoryVk);
+#endif
+    return GetFactoryFunc();
+}
 
 DILIGENT_END_NAMESPACE // namespace Diligent
