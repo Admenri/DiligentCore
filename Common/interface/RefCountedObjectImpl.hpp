@@ -43,7 +43,8 @@ namespace Diligent
 {
 
 // This class controls the lifetime of a refcounted object
-class RefCountersImpl final : public IReferenceCounters
+// NB: RefCountersImpl can't be final, see https://github.com/DiligentGraphics/DiligentCore/issues/704.
+class RefCountersImpl : public IReferenceCounters
 {
 public:
     inline virtual ReferenceCounterValueType AddStrongRef() override final
@@ -448,12 +449,14 @@ private:
         }
     }
 
-    void SelfDestroy()
+    // Make the method virtual to ensure that the object is destroyed in the same module
+    // where it was created, see https://github.com/DiligentGraphics/DiligentCore/issues/704.
+    virtual void SelfDestroy()
     {
         delete this;
     }
 
-    ~RefCountersImpl()
+    virtual ~RefCountersImpl()
     {
         VERIFY(m_NumStrongReferences.load() == 0 && m_NumWeakReferences.load() == 0,
                "There exist outstanding references to the object being destroyed");
