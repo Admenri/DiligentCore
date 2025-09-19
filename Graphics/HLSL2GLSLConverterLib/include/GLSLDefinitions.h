@@ -1188,7 +1188,7 @@ out gl_PerVertex
 
 #define _GET_GL_VERTEX_ID(VertexId)_TypeConvertStore(VertexId, gl_VertexID)
 #define _GET_GL_INSTANCE_ID(InstId)_TypeConvertStore(InstId, gl_InstanceID)
-#define _SET_GL_POSITION(Pos)gl_Position=_ExpandVector(Pos)
+#define _SET_GL_POSITION(Pos)gl_Position=_ExpandVector(Pos);gl_Position.y=-gl_Position.y
 
 #endif
 

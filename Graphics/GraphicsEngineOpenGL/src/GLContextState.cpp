@@ -633,7 +633,7 @@ void GLContextState::SetFrontFace(bool FrontCounterClockwise)
 {
     if (m_RSState.FrontCounterClockwise != FrontCounterClockwise)
     {
-        GLenum FrontFace = FrontCounterClockwise ? GL_CCW : GL_CW;
+        GLenum FrontFace = !FrontCounterClockwise ? GL_CCW : GL_CW;
         glFrontFace(FrontFace);
         DEV_CHECK_GL_ERROR("Failed to set front face");
         m_RSState.FrontCounterClockwise = FrontCounterClockwise;
